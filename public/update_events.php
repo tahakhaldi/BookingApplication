@@ -5,11 +5,11 @@ require "../config.php";
 try {
     $connection = new PDO($dsn, $username, $password, $options);
     
-    $event =[
-        "id"        => $_POST['id'],
+    $event = [
+        "id" => $_POST['id'],
         "title" => $_POST['title'],
-        "start"  => $_POST['start'],
-        "end"     => $_POST['end']
+        "start" => $_POST['start'],
+        "end" => $_POST['end']
     ];
     
     $sql = "UPDATE bookings
