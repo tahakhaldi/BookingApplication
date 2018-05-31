@@ -2,16 +2,18 @@
 <html>
 <head>
 <meta charset='utf-8' />
-<link href='../fullcalendar.min.css' rel='stylesheet' />
-<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
-<link href='../bootstrap-datetimepicker.min.css' rel='stylesheet' />
+<link rel="stylesheet" href='../fullcalendar.min.css' />
+<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" />
+<link rel="stylesheet" href='../bootstrap-datetimepicker.min.css' />
 <script src='../lib/moment.min.js'></script>
 <script src='../lib/jquery.min.js'></script>
 <script src='../lib/jquery-ui.min.js'></script>
 <script src='../fullcalendar.min.js'></script>
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
 <script src='../lib/bootstrap-datetimepicker.min.js'></script>
+<script src='../lib/jquery.ui-contextmenu.min.js'></script>
 
 
 <script>
@@ -37,14 +39,14 @@
       	editable: true,
       	eventLimit: true, 
       	events: 'php/get-events.php',
-      	eventRender: function(event, element, view) {
-    		if (event.allDay === 'true') {
-    	    	event.allDay = true;
-    	    } else {
-    	     	event.allDay = false;
-    	    }
+      	eventRender: function(event, element) {
+      		var originalClass = element[0].className;
+            element[0].className = originalClass + ' hasmenu';
    	  	},
-
+   	 	dayRender: function(day, cell) {
+       		var originalClass = cell[0].className;
+        	cell[0].className = originalClass + ' hasmenu';
+ 		},
    		selectable: true,
     	selectHelper: true,
     	select: function(start, end, allDay) {
@@ -111,6 +113,22 @@
      	}
    	  
     });
+
+	$('#calendar').contextmenu({
+		delegate: ".hasmenu",
+		menu: [
+			{title: "Copy", cmd: "copy", uiIcon: "ui-icon-copy"},
+			{title: "----"}
+			],
+		select: function(event, ui) {
+			alert("select " + ui.cmd + " on " + ui.target.text());
+		},
+		beforeOpen: function (event, ui) {   
+			var $menu = ui.menu,
+            	$target = ui.target;
+        	ui.menu.css('z-index', '1');
+		}
+	});
 
   });
 
