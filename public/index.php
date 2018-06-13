@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
 <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" />
 <link rel="stylesheet" href='../bootstrap-datetimepicker.min.css' />
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css">
 <script src='../lib/moment.min.js'></script>
 <script src='../lib/jquery.min.js'></script>
 <script src='../lib/jquery-ui.min.js'></script>
@@ -14,8 +15,7 @@
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
 <script src='../lib/bootstrap-datetimepicker.min.js'></script>
 <script src='../lib/jquery.ui-contextmenu.min.js'></script>
-
-
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.js"></script>
 <script>
 
 	$(document).ready(function() {
@@ -40,12 +40,15 @@
       	eventLimit: true, 
       	events: 'php/get-events.php',
       	eventRender: function(event, element) {
-      		var originalClass = element[0].className;
-            element[0].className = originalClass + ' hasmenu';
+      		element.attr('data-event-id', event.id);
+      		element.attr('data-event-title', event.title);
+      		element.attr('data-event-start', $.fullCalendar.formatDate(event.start, "Y-MM-DD HH:mm:ss"));
+      		element.attr('data-event-end', $.fullCalendar.formatDate(event.end, "Y-MM-DD HH:mm:ss"));
+            element[0].className += ' eventmenu';
    	  	},
    	 	dayRender: function(day, cell) {
-       		var originalClass = cell[0].className;
-        	cell[0].className = originalClass + ' hasmenu';
+   	   		cell.attr('data-day-id', day.format());
+        	cell[0].className += ' daymenu';
  		},
    		selectable: true,
     	selectHelper: true,
@@ -59,7 +62,7 @@
          	   		data: 'title='+ title+'&start='+ start +'&end='+ end,
          	   		type: "POST",
          	   		success: function(json) {
-         	   			alert('Added Successfully');
+         	   			//alert('Added Successfully');
          	   		}
             	});
             	$('#calendar').fullCalendar('renderEvent',
@@ -74,30 +77,19 @@
     	},
 	    editable: true,
     	eventDrop: function(event, delta) {
-        	var start = $.fullCalendar.formatDate(event.start, "Y-MM-DD HH:mm:ss");
-        	var end = $.fullCalendar.formatDate(event.end, "Y-MM-DD HH:mm:ss");
+        	var start = $.fullCalendar.formatDate(event.start, "yyyy-MM-dd HH:mm:ss");
+        	var end = $.fullCalendar.formatDate(event.end, "yyyy-MM-dd HH:mm:ss");
         	$.ajax({
      	   		url: 'update_events.php',
      	   		data: 'title='+ event.title+'&start='+ start +'&end='+ end +'&id='+ event.id ,
      	   		type: "POST",
      	   		success: function(json) {
-     	    		alert("Updated Successfully");
+     	    		//alert("Updated Successfully");
      	   		}
         	});
     	},
         eventClick: function(event) {
-         	var decision = confirm("Do you really want to do that?"); 
-         	if (decision) {
-             	$.ajax({
-             		type: "POST",
-             		url: "delete_event.php",
-             		data: "&id=" + event.id,
-             		success: function(json) {
-             			$('#calendar').fullCalendar('removeEvents', event.id);
-             			alert("Updated Successfully");
-             		}
-             	});
-         	}
+        	$('#bookingModal').modal('show');
        	},
         eventResize: function(event) {
      	   	var start = $.fullCalendar.formatDate(event.start, "yyyy-MM-dd HH:mm:ss");
@@ -107,7 +99,7 @@
      	    	data: 'title='+ event.title+'&start='+ start +'&end='+ end +'&id='+ event.id ,
      	    	type: "POST",
      	    	success: function(json) {
-     	     		alert("Updated Successfully");
+     	     		//alert("Updated Successfully");
      	    	}
      	   	});
      	}
@@ -115,18 +107,58 @@
     });
 
 	$('#calendar').contextmenu({
-		delegate: ".hasmenu",
-		menu: [
-			{title: "Copy", cmd: "copy", uiIcon: "ui-icon-copy"},
-			{title: "----"}
-			],
+		delegate: ".daymenu, .eventmenu",
+		menu: [],
 		select: function(event, ui) {
-			alert("select " + ui.cmd + " on " + ui.target.text());
+			if (ui.cmd == "edit") {
+				var event_title = ui.target.closest(".eventmenu").attr("data-event-title");
+				$('#patientFirstName').val(event_title); 
+				var event_start = ui.target.closest(".eventmenu").attr("data-event-start");
+				console.log(event_start);
+				$('#bookingStartTime').val(event_start); 
+				var event_end = ui.target.closest(".eventmenu").attr("data-event-end");
+				$('#bookingEndTime').val(event_end); 
+				$('#bookingModal').modal('show');
+			} else if (ui.cmd == "new") {
+				$('#bookingModal').modal('show');
+			} else if (ui.cmd == "delete") {
+				var event_id = ui.target.closest(".eventmenu").attr("data-event-id");
+				$.confirm({
+					theme: 'light',
+				    title: 'Deleting Booking',
+				    content: 'Are you sure you want to delete this booking?',
+				    type: 'red',
+				    buttons: {
+				        confirm: function () {
+			             	$.ajax({
+			             		type: "POST",
+			             		url: "delete_event.php",
+			             		data: "&id=" + event_id,
+			             		success: function(json) {
+			             			$('#calendar').fullCalendar('removeEvents', event_id);
+			             			$.alert('Booking Deleted Successfully');
+			             		}
+			             	});
+				        },
+				        cancel: function () {
+				        	return true; 	   
+				        }
+				    }
+			    }); 	
+			}
 		},
 		beforeOpen: function (event, ui) {   
-			var $menu = ui.menu,
-            	$target = ui.target;
-        	ui.menu.css('z-index', '1');
+            if( ui.target.closest(".eventmenu").length !== 0 ) {
+                $("#calendar").contextmenu("replaceMenu", [               	
+                	{title: "Edit Booking", cmd: "edit", uiIcon: "ui-icon-pencil"},
+                	{title: "Delete Booking", cmd: "delete", uiIcon: "ui-icon-closethick"},
+                	{title: "Approve Booking", cmd: "approve", uiIcon: "ui-icon-check"}
+                 ]);
+            } else if ( ui.target.closest(".daymenu").length !== 0 ) {
+                $("#calendar").contextmenu("replaceMenu", [
+                	{title: "New Booking", cmd: "new", uiIcon: "ui-icon-calendar"}
+                ]);
+            }    	    	
 		}
 	});
 
@@ -164,6 +196,7 @@
 </style>
 </head>
 <body>
+	
     <center><h3><b>Clinic Booking Application</b></h3></center></br>
     <div id='calendar'></div></br>
     <div id="block_container">
@@ -235,8 +268,8 @@
                 <div class='col-md-6'>
                     <div class="form-group">
                     	<label for="bookingStartTime">Start Date/Time</label>
-                        <div class='input-group date' id='bookingStartTime'>
-                            <input type='text' class="form-control" placeholder="yyyy-mm-dd hh:mm:ss"/>
+                        <div class='input-group date'>
+                            <input type='text' id='bookingStartTime' class="form-control" placeholder="yyyy-mm-dd hh:mm:ss"/>
                             <span class="input-group-addon">
                                 <span class="glyphicon glyphicon-calendar"></span>
                             </span>
@@ -246,8 +279,8 @@
                 <div class='col-md-6'>
                     <div class="form-group">
                     	<label for="bookingEndTime">End Date/Time</label>
-                        <div class='input-group date' id='bookingEndTime'>
-                            <input type='text' class="form-control" placeholder="yyyy-mm-dd hh:mm:ss"/>
+                        <div class='input-group date' >
+                            <input type='text' id='bookingEndTime' class="form-control" placeholder="yyyy-mm-dd hh:mm:ss"/>
                             <span class="input-group-addon">
                                 <span class="glyphicon glyphicon-calendar"></span>
                             </span>
@@ -280,10 +313,9 @@
             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             <button type="button" class="btn btn-primary">Save changes</button>
           </div>
-        </div>
-    
+        </div>  
       </div>
-    </div>
-    
+    </div> 
+     
 </body>
 </html> 
