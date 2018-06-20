@@ -42,6 +42,7 @@
       	eventRender: function(event, element) {
       		element.attr('data-event-id', event.id);
       		element.attr('data-event-title', event.title);
+      		element.attr('data-event-color', event.color);
       		element.attr('data-event-start', $.fullCalendar.formatDate(event.start, "Y-MM-DD HH:mm:ss"));
       		element.attr('data-event-end', $.fullCalendar.formatDate(event.end, "Y-MM-DD HH:mm:ss"));
             element[0].className += ' eventmenu';
@@ -77,8 +78,8 @@
     	},
 	    editable: true,
     	eventDrop: function(event, delta) {
-        	var start = $.fullCalendar.formatDate(event.start, "yyyy-MM-dd HH:mm:ss");
-        	var end = $.fullCalendar.formatDate(event.end, "yyyy-MM-dd HH:mm:ss");
+        	var start = $.fullCalendar.formatDate(event.start, "Y-MM-DD HH:mm:ss");
+        	var end = $.fullCalendar.formatDate(event.end, "Y-MM-DD HH:mm:ss");
         	$.ajax({
      	   		url: 'update_events.php',
      	   		data: 'title='+ event.title+'&start='+ start +'&end='+ end +'&id='+ event.id ,
@@ -89,11 +90,15 @@
         	});
     	},
         eventClick: function(event) {
+			$('#patientId').val(event.id); 
+			$('#patientFirstName').val(event.title); 
+			$('#bookingStartTime').val($.fullCalendar.formatDate(event.start, "Y-MM-DD HH:mm:ss")); 
+			$('#bookingEndTime').val($.fullCalendar.formatDate(event.end, "Y-MM-DD HH:mm:ss")); 
         	$('#bookingModal').modal('show');
        	},
         eventResize: function(event) {
-     	   	var start = $.fullCalendar.formatDate(event.start, "yyyy-MM-dd HH:mm:ss");
-     	   	var end = $.fullCalendar.formatDate(event.end, "yyyy-MM-dd HH:mm:ss");
+     	   	var start = $.fullCalendar.formatDate(event.start, "Y-MM-DD HH:mm:ss");
+     	   	var end = $.fullCalendar.formatDate(event.end, "Y-MM-DD HH:mm:ss");
      	   	$.ajax({
      	    	url: 'update_events.php',
      	    	data: 'title='+ event.title+'&start='+ start +'&end='+ end +'&id='+ event.id ,
@@ -111,10 +116,11 @@
 		menu: [],
 		select: function(event, ui) {
 			if (ui.cmd == "edit") {
+				var event_id = ui.target.closest(".eventmenu").attr("data-event-id");
+				$('#patientId').val(event_id); 
 				var event_title = ui.target.closest(".eventmenu").attr("data-event-title");
 				$('#patientFirstName').val(event_title); 
 				var event_start = ui.target.closest(".eventmenu").attr("data-event-start");
-				console.log(event_start);
 				$('#bookingStartTime').val(event_start); 
 				var event_end = ui.target.closest(".eventmenu").attr("data-event-end");
 				$('#bookingEndTime').val(event_end); 
@@ -125,20 +131,53 @@
 				var event_id = ui.target.closest(".eventmenu").attr("data-event-id");
 				$.confirm({
 					theme: 'light',
-				    title: 'Deleting Booking',
+				    title: 'Delete Booking',
 				    content: 'Are you sure you want to delete this booking?',
 				    type: 'red',
 				    buttons: {
-				        confirm: function () {
-			             	$.ajax({
-			             		type: "POST",
-			             		url: "delete_event.php",
-			             		data: "&id=" + event_id,
-			             		success: function(json) {
-			             			$('#calendar').fullCalendar('removeEvents', event_id);
-			             			$.alert('Booking Deleted Successfully');
-			             		}
-			             	});
+				        confirmdelete: {
+				            text: 'Delete',
+				            btnClass: 'btn-red',
+				            keys: ['enter'],
+				            action: function(){
+				             	$.ajax({
+				             		type: "POST",
+				             		url: "delete_event.php",
+				             		data: "&id=" + event_id,
+				             		success: function(json) {
+				             			$('#calendar').fullCalendar('removeEvents', event_id);
+				             			$.alert('Booking Successfully Deleted');
+				             		}
+				             	});
+				            }
+				        },
+				        cancel: function () {
+				        	return true; 	   
+				        }
+				    }
+			    }); 	
+			} else if (ui.cmd == "approve") {
+				var event_id = ui.target.closest(".eventmenu").attr("data-event-id");
+				$.confirm({
+					theme: 'light',
+				    title: 'Approve Booking',
+				    content: 'Are you sure you want to approve this booking?',
+				    type: 'green',
+				    buttons: {
+				        confirmdelete: {
+				            text: 'Approve',
+				            btnClass: 'btn-green',
+				            keys: ['enter'],
+				            action: function(){
+				             	$.ajax({
+				             		type: "POST",
+				             		url: "approve_event.php",
+				             		data: "&id=" + event_id,
+				             		success: function(json) {
+				             			location.reload();
+				             		}
+				             	});
+				            }
 				        },
 				        cancel: function () {
 				        	return true; 	   
@@ -147,8 +186,15 @@
 			    }); 	
 			}
 		},
-		beforeOpen: function (event, ui) {   
-            if( ui.target.closest(".eventmenu").length !== 0 ) {
+		beforeOpen: function (event, ui) {
+			var event_color = ui.target.closest(".eventmenu").attr("data-event-color");
+			if( ui.target.closest(".eventmenu").length !== 0  && (event_color == "#31CD73")) {
+                $("#calendar").contextmenu("replaceMenu", [               	
+                	{title: "Edit Booking", cmd: "edit", uiIcon: "ui-icon-pencil"},
+                	{title: "Delete Booking", cmd: "delete", uiIcon: "ui-icon-closethick"}
+                 ]);
+            } 
+			else if( ui.target.closest(".eventmenu").length !== 0 ) {
                 $("#calendar").contextmenu("replaceMenu", [               	
                 	{title: "Edit Booking", cmd: "edit", uiIcon: "ui-icon-pencil"},
                 	{title: "Delete Booking", cmd: "delete", uiIcon: "ui-icon-closethick"},
@@ -160,6 +206,28 @@
                 ]);
             }    	    	
 		}
+	});
+
+	$("#save_changes").click(function(e) {
+	    e.preventDefault();	    
+	    var event_id = $('#patientId').val();
+		var event_title = $('#patientFirstName').val();
+		var event_start = $('#bookingStartTime').val();
+		var event_end = $('#bookingEndTime').val();
+    	$.ajax({
+ 	   		url: 'update_events.php',
+ 	   		data: 'title='+ event_title+'&start='+ event_start +'&end='+ event_end +'&id='+ event_id ,
+ 	   		type: "POST",
+ 	   		success: function(json) {
+ 	   		$('#bookingModal').modal('hide');
+ 	   			$('#calendar').fullCalendar('refetchEvents');
+ 	   		}
+    	});
+	});
+
+	$("#cancel_changes").click(function(e) {
+	    e.preventDefault();	    
+	    $(':input').val('');
 	});
 
   });
@@ -200,7 +268,7 @@
     <center><h3><b>Clinic Booking Application</b></h3></center></br>
     <div id='calendar'></div></br>
     <div id="block_container">
-        <div id="bloc1"><i class="fa fa-circle" style="font-size:20px;color:green; padding-right: 10px;"></i>Approved</div>  
+        <div id="bloc1"><i class="fa fa-circle" style="font-size:20px;color:#31CD73; padding-right: 10px;"></i>Approved</div>  
         <div id="bloc2"><i class="fa fa-circle" style="font-size:20px;color:#3A87AD; padding-left: 10px; ; padding-right: 10px;"></i>Pending</div>   
     </div>
     
@@ -211,21 +279,22 @@
         <!-- Modal content-->
         <div class="modal-content">
           <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <button type="button" id= "cancel_changes" class="close" data-dismiss="modal">&times;</button>
             <h4 class="modal-title">Booking Form</h4>
           </div>
           <div class="modal-body">
           
+          	<input type="hidden" id="patientId"/>      
           	<label for="patientFirstName">Patient Full Name</label>
             <div class="row">           
                 <div class='col-md-6'>
                     <div class="form-group">
-                        <input type="text" class="form-control form-control-sm" id="patientFirstName" placeholder="First name">
+                        <input type="text" class="form-control form-control-sm" id="patientFirstName" placeholder="First name"/>
                     </div>
                 </div>
                 <div class='col-md-6'>
                     <div class="form-group">
-                        <input type="text" class="form-control form-control-sm" id="patientLastName" placeholder="Last name">
+                        <input type="text" class="form-control form-control-sm" id="patientLastName" placeholder="Last name"/>
                     </div>
                 </div>
             </div>
@@ -310,8 +379,8 @@
             </script>                
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary">Save changes</button>
+            <button type="button" id= "cancel_changes" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button type="button" id= "save_changes" class="btn btn-primary">Save changes</button>
           </div>
         </div>  
       </div>

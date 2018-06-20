@@ -32,7 +32,7 @@ for ($i = 0; $i < count($input_arrays); $i++) {
         $output_arrays[$i]['title'] = $input_arrays[$i]['title'];
     }
     if (isset($input_arrays[$i]['approval']) && ($input_arrays[$i]['approval'] == '1')){
-        $output_arrays[$i]['color'] = "green";
+        $output_arrays[$i]['color'] = "#31CD73";
     }
     if (isset($input_arrays[$i]['start'])){
         $output_arrays[$i]['start'] = (new DateTime($input_arrays[$i]['start']))->format('Y-m-d H:i:s');
