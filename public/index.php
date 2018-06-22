@@ -5,7 +5,7 @@
 <link rel="stylesheet" href='../fullcalendar.min.css' />
 <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
 <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
-<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" />
+<link rel="stylesheet" href='//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css' />
 <link rel="stylesheet" href='../bootstrap-datetimepicker.min.css' />
 <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css">
 <script src='../lib/moment.min.js'></script>
@@ -25,19 +25,23 @@
     	    createBooking: {
     	      text: 'New booking',
     	      click: function() {
+    	    	$('#bookingStartTime').val($.fullCalendar.formatDate(moment(), "Y-MM-DD HH:mm:ss")); 
     	      	$('#bookingModal').modal('show');
     	      }
-    	    }
+    	    },
+    	    logoutSession: {
+      	      text: 'Logout',
+      	      click: function() {
+      	      	//
+      	      }
+      	    }
     	},	
       	header: {
-        	left: 'prev,next today',
+        	left: 'prev,next today createBooking',
         	center: 'title',
-        	right: 'month,agendaWeek,listWeek createBooking'
+        	right: 'month,agendaWeek,listWeek logoutSession'
       	},
-      	defaultDate: new Date(),
-      	navLinks: true, 
-      	editable: true,
-      	eventLimit: true, 
+      	defaultDate: moment(),
       	events: 'php/get-events.php',
       	eventRender: function(event, element) {
       		element.attr('data-event-id', event.id);
@@ -46,13 +50,13 @@
       		element.attr('data-event-start', $.fullCalendar.formatDate(event.start, "Y-MM-DD HH:mm:ss"));
       		element.attr('data-event-end', $.fullCalendar.formatDate(event.end, "Y-MM-DD HH:mm:ss"));
             element[0].className += ' eventmenu';
+            $(element).tooltip({title: "<div align='left'><b>Patient Name: </b>"+event.title+"<br/><b>Patient Gender: </b>"+event.title+"<br/><b>Physician Name: </b>"+"Dr. David Warkentin"+"</div>", container:'body', placement:'right', html:true});
    	  	},
    	 	dayRender: function(day, cell) {
    	   		cell.attr('data-day-id', day.format());
+   	   		cell.attr('data-day-start', $.fullCalendar.formatDate(day, "Y-MM-DD HH:mm:ss"));
         	cell[0].className += ' daymenu';
  		},
-   		selectable: true,
-    	selectHelper: true,
     	select: function(start, end, allDay) {
         	var title = prompt('Event Title:');
        		if (title) {
@@ -76,39 +80,13 @@
         	}
        		$('#calendar').fullCalendar('unselect');
     	},
-	    editable: true,
-    	eventDrop: function(event, delta) {
-        	var start = $.fullCalendar.formatDate(event.start, "Y-MM-DD HH:mm:ss");
-        	var end = $.fullCalendar.formatDate(event.end, "Y-MM-DD HH:mm:ss");
-        	$.ajax({
-     	   		url: 'update_events.php',
-     	   		data: 'title='+ event.title+'&start='+ start +'&end='+ end +'&id='+ event.id ,
-     	   		type: "POST",
-     	   		success: function(json) {
-     	    		//alert("Updated Successfully");
-     	   		}
-        	});
-    	},
         eventClick: function(event) {
 			$('#patientId').val(event.id); 
 			$('#patientFirstName').val(event.title); 
 			$('#bookingStartTime').val($.fullCalendar.formatDate(event.start, "Y-MM-DD HH:mm:ss")); 
 			$('#bookingEndTime').val($.fullCalendar.formatDate(event.end, "Y-MM-DD HH:mm:ss")); 
         	$('#bookingModal').modal('show');
-       	},
-        eventResize: function(event) {
-     	   	var start = $.fullCalendar.formatDate(event.start, "Y-MM-DD HH:mm:ss");
-     	   	var end = $.fullCalendar.formatDate(event.end, "Y-MM-DD HH:mm:ss");
-     	   	$.ajax({
-     	    	url: 'update_events.php',
-     	    	data: 'title='+ event.title+'&start='+ start +'&end='+ end +'&id='+ event.id ,
-     	    	type: "POST",
-     	    	success: function(json) {
-     	     		//alert("Updated Successfully");
-     	    	}
-     	   	});
-     	}
-   	  
+       	}  	  
     });
 
 	$('#calendar').contextmenu({
@@ -126,6 +104,8 @@
 				$('#bookingEndTime').val(event_end); 
 				$('#bookingModal').modal('show');
 			} else if (ui.cmd == "new") {
+				var day_start = ui.target.closest(".daymenu").attr("data-day-start");
+				$('#bookingStartTime').val(day_start); 
 				$('#bookingModal').modal('show');
 			} else if (ui.cmd == "delete") {
 				var event_id = ui.target.closest(".eventmenu").attr("data-event-id");
@@ -225,8 +205,7 @@
     	});
 	});
 
-	$("#cancel_changes").click(function(e) {
-	    e.preventDefault();	    
+	$('#bookingModal').on('hidden.bs.modal', function () {    
 	    $(':input').val('');
 	});
 
@@ -236,6 +215,9 @@
 <style>
 
   body {
+    background: url(../background.jpg);
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
     margin: 40px 10px;
     padding: 0;
     font-family: "Lucida Grande",Helvetica,Arial,Verdana,sans-serif;
@@ -260,12 +242,17 @@
   .fc h2 {
     font-size: 20px;
   }
+  
+  img {
+    opacity: 1.5;
+    filter: alpha(opacity=50); /* For IE8 and earlier */
+  }
 
 </style>
 </head>
 <body>
 	
-    <center><h3><b>Clinic Booking Application</b></h3></center></br>
+    <center><h3><b>MediBook Clinic Application</b></h3></center></br>
     <div id='calendar'></div></br>
     <div id="block_container">
         <div id="bloc1"><i class="fa fa-circle" style="font-size:20px;color:#31CD73; padding-right: 10px;"></i>Approved</div>  
@@ -279,7 +266,7 @@
         <!-- Modal content-->
         <div class="modal-content">
           <div class="modal-header">
-            <button type="button" id= "cancel_changes" class="close" data-dismiss="modal">&times;</button>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
             <h4 class="modal-title">Booking Form</h4>
           </div>
           <div class="modal-body">
@@ -303,11 +290,9 @@
                 <div class='col-md-6'>
                     <div class="form-group">
                     	<label for="patientBirth">Patient Birth</label>
-                        <div class='input-group date' id='patientBirth'>
-                            <input type='text' class="form-control" placeholder="yyyy-mm-dd"/>
-                            <span class="input-group-addon">
-                                <span class="glyphicon glyphicon-calendar"></span>
-                            </span>
+                        <div class='input-group date'>
+                            <input type='text' id='patientBirth' class="form-control" placeholder="yyyy-mm-dd"/>
+                            <span class="input-group-addon"></span>
                         </div>
                     </div>
                 </div>
@@ -339,9 +324,7 @@
                     	<label for="bookingStartTime">Start Date/Time</label>
                         <div class='input-group date'>
                             <input type='text' id='bookingStartTime' class="form-control" placeholder="yyyy-mm-dd hh:mm:ss"/>
-                            <span class="input-group-addon">
-                                <span class="glyphicon glyphicon-calendar"></span>
-                            </span>
+                            <span class="input-group-addon"></span>
                         </div>
                     </div>
                 </div>
@@ -350,9 +333,7 @@
                     	<label for="bookingEndTime">End Date/Time</label>
                         <div class='input-group date' >
                             <input type='text' id='bookingEndTime' class="form-control" placeholder="yyyy-mm-dd hh:mm:ss"/>
-                            <span class="input-group-addon">
-                                <span class="glyphicon glyphicon-calendar"></span>
-                            </span>
+                            <span class="input-group-addon"></span>
                         </div>
                     </div>
                 </div>
@@ -360,13 +341,13 @@
             <script type="text/javascript">
                 $(function () {
                 	$('#patientBirth').datetimepicker({
-                    	format: 'YYYY-MM-DD'
+                    	format: 'Y-MM-DD'
                     });
                     $('#bookingStartTime').datetimepicker({
-                    	format: 'YYYY-MM-DD HH:MM:SS'
+                    	format: 'Y-MM-DD HH:mm:ss'
                     });
                     $('#bookingEndTime').datetimepicker({
-                    	format: 'YYYY-MM-DD HH:MM:SS',
+                    	format: 'Y-MM-DD HH:mm:ss',
                         useCurrent: false //Important! See issue #1075
                     });
                     $("#bookingStartTime").on("dp.change", function (e) {
@@ -379,7 +360,7 @@
             </script>                
           </div>
           <div class="modal-footer">
-            <button type="button" id= "cancel_changes" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             <button type="button" id= "save_changes" class="btn btn-primary">Save changes</button>
           </div>
         </div>  
