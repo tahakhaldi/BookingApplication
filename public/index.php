@@ -25,6 +25,7 @@
     	    createBooking: {
     	      text: 'New booking',
     	      click: function() {
+    	    	$(':input').val('');
     	    	$('#bookingStartTime').val($.fullCalendar.formatDate(moment(), "Y-MM-DD HH:mm:ss")); 
     	      	$('#bookingModal').modal('show');
     	      }
@@ -45,44 +46,31 @@
       	events: 'php/get-events.php',
       	eventRender: function(event, element) {
       		element.attr('data-event-id', event.id);
-      		element.attr('data-event-title', event.title);
+      		element.attr('data-event-firstname', event.firstname);
+      		element.attr('data-event-lastname', event.lastname);
+      		element.attr('data-event-reason', event.reason);
+      		element.attr('data-event-physician', event.physician);
+      		element.attr('data-event-age', event.age);
+      		element.attr('data-event-gender', event.gender);
       		element.attr('data-event-color', event.color);
       		element.attr('data-event-start', $.fullCalendar.formatDate(event.start, "Y-MM-DD HH:mm:ss"));
       		element.attr('data-event-end', $.fullCalendar.formatDate(event.end, "Y-MM-DD HH:mm:ss"));
             element[0].className += ' eventmenu';
-            $(element).tooltip({title: "<div align='left'><b>Patient Name: </b>"+event.title+"<br/><b>Patient Gender: </b>"+event.title+"<br/><b>Physician Name: </b>"+"Dr. David Warkentin"+"</div>", container:'body', placement:'right', html:true});
+            $(element).tooltip({title: "<div align='left'><b>Patient Full Name: </b>"+event.firstname+" "+event.lastname+"<br/><b>Patient Gender: </b>"+event.gender+"<br/><b>Physician Name: </b>"+event.physician+"</div>", container:'body', placement:'right', html:true});
    	  	},
    	 	dayRender: function(day, cell) {
    	   		cell.attr('data-day-id', day.format());
    	   		cell.attr('data-day-start', $.fullCalendar.formatDate(day, "Y-MM-DD HH:mm:ss"));
         	cell[0].className += ' daymenu';
  		},
-    	select: function(start, end, allDay) {
-        	var title = prompt('Event Title:');
-       		if (title) {
-            	var start = $.fullCalendar.formatDate(start, "Y-MM-DD HH:mm:ss");
-            	var end = $.fullCalendar.formatDate(end, "Y-MM-DD HH:mm:ss");
-            	$.ajax({
-         	   		url: 'add_events.php',
-         	   		data: 'title='+ title+'&start='+ start +'&end='+ end,
-         	   		type: "POST",
-         	   		success: function(json) {
-         	   			//alert('Added Successfully');
-         	   		}
-            	});
-            	$('#calendar').fullCalendar('renderEvent',
-            	{
-             	   	title: title,
-             	   	start: start,
-             	   	end: end,
-             	   	allDay: allDay
-           		},true);
-        	}
-       		$('#calendar').fullCalendar('unselect');
-    	},
         eventClick: function(event) {
 			$('#patientId').val(event.id); 
-			$('#patientFirstName').val(event.title); 
+			$('#patientFirstName').val(event.firstname); 
+			$('#patientLastName').val(event.lastname);
+			$('#patientReasonofVisit').val(event.reason); 
+			$('#bookingDoctor').val(event.physician); 
+			$('#patientBirth').val(event.age);
+			$('#patientGender').val(event.gender);
 			$('#bookingStartTime').val($.fullCalendar.formatDate(event.start, "Y-MM-DD HH:mm:ss")); 
 			$('#bookingEndTime').val($.fullCalendar.formatDate(event.end, "Y-MM-DD HH:mm:ss")); 
         	$('#bookingModal').modal('show');
@@ -96,14 +84,25 @@
 			if (ui.cmd == "edit") {
 				var event_id = ui.target.closest(".eventmenu").attr("data-event-id");
 				$('#patientId').val(event_id); 
-				var event_title = ui.target.closest(".eventmenu").attr("data-event-title");
-				$('#patientFirstName').val(event_title); 
+				var event_firstname = ui.target.closest(".eventmenu").attr("data-event-firstname");
+				$('#patientFirstName').val(event_firstname); 
+				var event_lastname = ui.target.closest(".eventmenu").attr("data-event-lastname");
+				$('#patientLastName').val(event_lastname); 
+				var event_reason = ui.target.closest(".eventmenu").attr("data-event-reason");
+				$('#patientReasonofVisit').val(event_reason); 
+				var event_physician = ui.target.closest(".eventmenu").attr("data-event-physician");
+				$('#bookingDoctor').val(event_physician);
+				var event_age = ui.target.closest(".eventmenu").attr("data-event-age");
+				$('#patientBirth').val(event_age);
+				var event_gender = ui.target.closest(".eventmenu").attr("data-event-gender");
+				$('#patientGender').val(event_gender); 
 				var event_start = ui.target.closest(".eventmenu").attr("data-event-start");
 				$('#bookingStartTime').val(event_start); 
 				var event_end = ui.target.closest(".eventmenu").attr("data-event-end");
 				$('#bookingEndTime').val(event_end); 
 				$('#bookingModal').modal('show');
 			} else if (ui.cmd == "new") {
+				$(':input').val('');
 				var day_start = ui.target.closest(".daymenu").attr("data-day-start");
 				$('#bookingStartTime').val(day_start); 
 				$('#bookingModal').modal('show');
@@ -191,16 +190,21 @@
 	$("#save_changes").click(function(e) {
 	    e.preventDefault();	    
 	    var event_id = $('#patientId').val();
-		var event_title = $('#patientFirstName').val();
+	    var event_firstname = $('#patientFirstName').val(); 
+	    var event_lastname = $('#patientLastName').val(); 
+	    var event_reason = $('#patientReasonofVisit').val();
+	    var event_physician = $('#bookingDoctor').val();
+	    var event_age = $('#patientBirth').val();
+	    var event_gender = $('#patientGender').val();	    
 		var event_start = $('#bookingStartTime').val();
-		var event_end = $('#bookingEndTime').val();
+		var event_end = $('#bookingEndTime').val();		
     	$.ajax({
- 	   		url: 'update_events.php',
- 	   		data: 'title='+ event_title+'&start='+ event_start +'&end='+ event_end +'&id='+ event_id ,
+ 	   		url: 'save_events.php',
+ 	   		data: 'id='+event_id+'&firstname='+event_firstname+'&lastname='+event_lastname+'&reason='+event_reason+'&physician='+event_physician+'&age='+event_age+'&gender='+event_gender+'&start='+event_start+'&end='+event_end ,
  	   		type: "POST",
  	   		success: function(json) {
- 	   		$('#bookingModal').modal('hide');
- 	   			$('#calendar').fullCalendar('refetchEvents');
+ 	   			$('#bookingModal').modal('hide');
+ 	   			location.reload();
  	   		}
     	});
 	});
@@ -247,6 +251,8 @@
     opacity: 1.5;
     filter: alpha(opacity=50); /* For IE8 and earlier */
   }
+  
+  .required:after { content:" *" ;color:red  }
 
 </style>
 </head>
@@ -272,24 +278,24 @@
           <div class="modal-body">
           
           	<input type="hidden" id="patientId"/>      
-          	<label for="patientFirstName">Patient Full Name</label>
+          	<label for="patientFirstName" class="required">Patient Full Name</label>
             <div class="row">           
                 <div class='col-md-6'>
                     <div class="form-group">
-                        <input type="text" class="form-control form-control-sm" id="patientFirstName" placeholder="First name"/>
+                        <input type="text" class="form-control form-control-sm" style="text-transform: capitalize;" id="patientFirstName" placeholder="First name"/>
                     </div>
                 </div>
                 <div class='col-md-6'>
                     <div class="form-group">
-                        <input type="text" class="form-control form-control-sm" id="patientLastName" placeholder="Last name"/>
+                        <input type="text" class="form-control form-control-sm" style="text-transform: capitalize;" id="patientLastName" placeholder="Last name"/>
                     </div>
                 </div>
-            </div>
+            </div>                             
                      	
             <div class="row">           
                 <div class='col-md-6'>
                     <div class="form-group">
-                    	<label for="patientBirth">Patient Birth</label>
+                    	<label for="patientBirth" class="required">Patient Birth</label>
                         <div class='input-group date'>
                             <input type='text' id='patientBirth' class="form-control" placeholder="yyyy-mm-dd"/>
                             <span class="input-group-addon"></span>
@@ -298,7 +304,7 @@
                 </div>
                 <div class='col-md-6'>
                     <div class="form-group">
-                    	<label for="patientGender">Patient Gender</label>
+                    	<label for="patientGender" class="required">Patient Gender</label>
                     	<select class="form-control form-control-sm" id="patientGender">
                           	<option>Male</option>
                             <option>Female</option>
@@ -308,20 +314,25 @@
             </div> 
                                
             <div class="form-group">
-                <label for="bookingDoctor">Physician Name</label>
+                <label for="bookingDoctor" class="required">Physician Name</label>
                 <select class="form-control form-control-sm" id="bookingDoctor">
-                  <option>Dr. David Warkentin</option>
-                  <option>Dr. Bruce Hoffman</option>
-                  <option>Dr. Michael Omidi</option>
-                  <option>Dr. James Ojjeh</option>
-                  <option>Dr. Sadir Alrawi</option>
+                  <option value="davidwarkentin">Dr. David Warkentin</option>
+                  <option value="brucehoffman">Dr. Bruce Hoffman</option>
+                  <option value="michaelomidi">Dr. Michael Omidi</option>
+                  <option value="jamesojjeh">Dr. James Ojjeh</option>
+                  <option value="sadiralrawi">Dr. Sadir Alrawi</option>
                 </select>
             </div>
+            
+            <div class="form-group">
+            	<label for="patientReasonofVisit">Reason of visit</label>
+            	<textarea rows="2" class="form-control" id="patientReasonofVisit" placeholder="Please Explain."></textarea>
+            </div>              
                    
             <div class="row">           
                 <div class='col-md-6'>
                     <div class="form-group">
-                    	<label for="bookingStartTime">Start Date/Time</label>
+                    	<label for="bookingStartTime" class="required">Start Date/Time</label>
                         <div class='input-group date'>
                             <input type='text' id='bookingStartTime' class="form-control" placeholder="yyyy-mm-dd hh:mm:ss"/>
                             <span class="input-group-addon"></span>
@@ -330,7 +341,7 @@
                 </div>
                 <div class='col-md-6'>
                     <div class="form-group">
-                    	<label for="bookingEndTime">End Date/Time</label>
+                    	<label for="bookingEndTime" class="required">End Date/Time</label>
                         <div class='input-group date' >
                             <input type='text' id='bookingEndTime' class="form-control" placeholder="yyyy-mm-dd hh:mm:ss"/>
                             <span class="input-group-addon"></span>
@@ -338,6 +349,13 @@
                     </div>
                 </div>
             </div>
+            
+            <div class="row">          
+                <div align='right' style='padding-right: 20px;'>
+                    <font style='font-size:18px;' color="red">* </font>Required Fields
+                </div>
+            </div>
+            
             <script type="text/javascript">
                 $(function () {
                 	$('#patientBirth').datetimepicker({

@@ -4,12 +4,11 @@ use test;
 
 CREATE TABLE `bookings` (
 	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
-	`title` VARCHAR(255) COLLATE utf8_bin NOT NULL,
 	`firstname` VARCHAR(30) NOT NULL,
 	`lastname` VARCHAR(30) NOT NULL,
-	`email` VARCHAR(50) NOT NULL,
-	`age` INT(3) NOT NULL,
-	`location` VARCHAR(50) NOT NULL,
+	`gender` ENUM('Male','Female') NOT NULL,
+	`age` DATE NOT NULL,
+	`physician` VARCHAR(30) NOT NULL,
 	`reason` TEXT NOT NULL,
 	`start` DATETIME NOT NULL,
 	`end` DATETIME NOT NULL,

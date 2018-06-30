@@ -28,8 +28,24 @@ for ($i = 0; $i < count($input_arrays); $i++) {
     if(isset($input_arrays[$i]['id'])){
         $output_arrays[$i]['id'] = $input_arrays[$i]['id'];
     }
-    if (isset($input_arrays[$i]['title'])){
-        $output_arrays[$i]['title'] = $input_arrays[$i]['title'];
+    if (isset($input_arrays[$i]['firstname'])){
+        $output_arrays[$i]['title'] = $input_arrays[$i]['firstname'];
+        $output_arrays[$i]['firstname'] = $input_arrays[$i]['firstname'];
+    }
+    if (isset($input_arrays[$i]['lastname'])){
+        $output_arrays[$i]['lastname'] = $input_arrays[$i]['lastname'];
+    }
+    if (isset($input_arrays[$i]['reason'])){
+        $output_arrays[$i]['reason'] = $input_arrays[$i]['reason'];
+    }
+    if (isset($input_arrays[$i]['age'])){
+        $output_arrays[$i]['age'] = (new DateTime($input_arrays[$i]['age']))->format('Y-m-d');
+    }
+    if (isset($input_arrays[$i]['physician'])){
+        $output_arrays[$i]['physician'] = $input_arrays[$i]['physician'];
+    }
+    if (isset($input_arrays[$i]['gender'])){
+        $output_arrays[$i]['gender'] = $input_arrays[$i]['gender'];
     }
     if (isset($input_arrays[$i]['approval']) && ($input_arrays[$i]['approval'] == '1')){
         $output_arrays[$i]['color'] = "#31CD73";
