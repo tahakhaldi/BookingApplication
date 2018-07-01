@@ -1,3 +1,13 @@
+<?php
+// Initialize the session
+session_start();
+
+// If session variable is not set it will redirect to login page
+if(!isset($_SESSION['username']) || empty($_SESSION['username'])){
+  header("location:../index.php");
+  exit;
+}
+?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -33,7 +43,25 @@
     	    logoutSession: {
       	      text: 'Logout',
       	      click: function() {
-      	      	//
+  				$.confirm({
+					theme: 'light',
+				    title: 'Logout',
+				    content: 'Are you sure you want to logout from your current session?',
+				    type: 'red',
+				    buttons: {
+				        confirmdelete: {
+				            text: 'Logout',
+				            btnClass: 'btn-red',
+				            keys: ['enter'],
+				            action: function(){
+				            	window.location.href = "../login/logout.php";
+				            }
+				        },
+				        cancel: function () {
+				        	return true; 	   
+				        }
+				    }
+			    });
       	      }
       	    }
     	},	
