@@ -31,7 +31,8 @@ try {
             age = :age,
             gender = :gender,
             start = :start,
-            end = :end
+            end = :end,
+            last_updated = CURRENT_TIMESTAMP
             WHERE id = :id";
     } else {
         unset($event["id"]);

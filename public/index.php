@@ -84,7 +84,8 @@ if(!isset($_SESSION['username']) || empty($_SESSION['username'])){
       		element.attr('data-event-start', $.fullCalendar.formatDate(event.start, "Y-MM-DD HH:mm:ss"));
       		element.attr('data-event-end', $.fullCalendar.formatDate(event.end, "Y-MM-DD HH:mm:ss"));
             element[0].className += ' eventmenu';
-            $(element).tooltip({title: "<div align='left'><b>Patient Full Name: </b>"+event.firstname+" "+event.lastname+"<br/><b>Patient Gender: </b>"+event.gender+"<br/><b>Physician Name: </b>"+event.physician+"</div>", container:'body', placement:'right', html:true});
+            var physician_name = event.physician.split('_');
+            $(element).tooltip({title: "<div align='left'><b>Patient Full Name: </b>"+event.firstname+" "+event.lastname+"<br/><b>Patient Gender: </b>"+event.gender+"<br/><b>Physician Name: </b>"+"Dr. "+capitalizeFirstLetter(physician_name[0])+" "+capitalizeFirstLetter(physician_name[1])+"</div>", container:'body', placement:'right', html:true});
    	  	},
    	 	dayRender: function(day, cell) {
    	   		cell.attr('data-day-id', day.format());
@@ -226,6 +227,10 @@ if(!isset($_SESSION['username']) || empty($_SESSION['username'])){
 	    var event_gender = $('#patientGender').val();	    
 		var event_start = $('#bookingStartTime').val();
 		var event_end = $('#bookingEndTime').val();		
+		if (new Date(event_start).getTime() > new Date(event_end).getTime()) {
+			$.alert("Booking start date cannot be after its end date!");
+			return;
+		}
     	$.ajax({
  	   		url: 'save_events.php',
  	   		data: 'id='+event_id+'&firstname='+event_firstname+'&lastname='+event_lastname+'&reason='+event_reason+'&physician='+event_physician+'&age='+event_age+'&gender='+event_gender+'&start='+event_start+'&end='+event_end ,
@@ -344,11 +349,11 @@ if(!isset($_SESSION['username']) || empty($_SESSION['username'])){
             <div class="form-group">
                 <label for="bookingDoctor" class="required">Physician Name</label>
                 <select class="form-control form-control-sm" id="bookingDoctor">
-                  <option value="davidwarkentin">Dr. David Warkentin</option>
-                  <option value="brucehoffman">Dr. Bruce Hoffman</option>
-                  <option value="michaelomidi">Dr. Michael Omidi</option>
-                  <option value="jamesojjeh">Dr. James Ojjeh</option>
-                  <option value="sadiralrawi">Dr. Sadir Alrawi</option>
+                  <option value="david_warkentin">Dr. David Warkentin</option>
+                  <option value="bruce_hoffman">Dr. Bruce Hoffman</option>
+                  <option value="michael_omidi">Dr. Michael Omidi</option>
+                  <option value="james_ojjeh">Dr. James Ojjeh</option>
+                  <option value="sadir_alrawi">Dr. Sadir Alrawi</option>
                 </select>
             </div>
             
@@ -415,3 +420,8 @@ if(!isset($_SESSION['username']) || empty($_SESSION['username'])){
      
 </body>
 </html> 
+<script>
+    function capitalizeFirstLetter(string) {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+    }
+</script>
