@@ -13,7 +13,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         
         // Check if username is empty
         if(empty(trim($_POST["username"]))){
-            $username_err = 'Please enter username.';
+            $username_err = 'Please enter a username.';
         } else{
             $username = trim($_POST["username"]);
         }
@@ -51,7 +51,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                                 header("location:public/index.php");
                             } else{
                                 // Display an error message if password is not valid
-                                $password_err = 'The password you entered was not valid.';
+                                $password_err = 'The password you entered is invalid.';
                             }
                         }
                     } else{
@@ -87,7 +87,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 <body>
 
   <div class="login-page">
-  <center><h2>MediBook Clinic Application</h2></center>
+  <center><h2 style="color:#002B70">MediBook Clinic Application</h2></center>
   <div class="form">
     <form class="login-form" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
       <div class="form-group <?php echo (!empty($username_err)) ? 'has-error' : ''; ?>">

@@ -219,21 +219,36 @@ if(!isset($_SESSION['username']) || empty($_SESSION['username'])){
 	$("#save_changes").click(function(e) {
 	    e.preventDefault();	    
 	    var event_id = $('#patientId').val();
-	    var event_firstname = $('#patientFirstName').val(); 
-	    var event_lastname = $('#patientLastName').val(); 
+	    var event_first_name = capitalizeFirstLetter($('#patientFirstName').val()); 
+	    var event_last_name = capitalizeFirstLetter($('#patientLastName').val()); 
 	    var event_reason = $('#patientReasonofVisit').val();
-	    var event_physician = $('#bookingDoctor').val();
-	    var event_age = $('#patientBirth').val();
+	    var event_physician_name = $('#bookingDoctor').val();
+	    var event_birth = $('#patientBirth').val();
 	    var event_gender = $('#patientGender').val();	    
-		var event_start = $('#bookingStartTime').val();
-		var event_end = $('#bookingEndTime').val();		
-		if (new Date(event_start).getTime() > new Date(event_end).getTime()) {
-			$.alert("Booking start date cannot be after its end date!");
+		var event_start_date = $('#bookingStartTime').val();
+		var event_end_date = $('#bookingEndTime').val();
+		if (new Date(event_birth).getFullYear() > new Date().getFullYear()-18) {
+			$.alert("Patient must be at least 18 years of age!");
+			return;
+		}	
+		if (new Date(event_start_date).getTime() > new Date(event_end_date).getTime()) {
+			$.alert("Booking End Date cannot be before Start Date!");
 			return;
 		}
+		var required_data = {event_first_name: event_first_name, event_last_name: event_last_name, event_birth: event_birth, event_gender: event_gender, event_physician_name: event_physician_name, event_start_date: event_start_date, event_end_date: event_end_date};
+	    for (var prop in required_data) {
+			if (!required_data[prop]) {
+				if(prop.split('_')[2]){
+					$.alert(capitalizeFirstLetter(prop.split('_')[1])+" "+capitalizeFirstLetter(prop.split('_')[2])+" cannot be empty!");	
+				} else {
+					$.alert(capitalizeFirstLetter(prop.split('_')[1])+" cannot be empty!");
+				}
+				return;
+			}
+	    }
     	$.ajax({
  	   		url: 'save_events.php',
- 	   		data: 'id='+event_id+'&firstname='+event_firstname+'&lastname='+event_lastname+'&reason='+event_reason+'&physician='+event_physician+'&age='+event_age+'&gender='+event_gender+'&start='+event_start+'&end='+event_end ,
+ 	   		data: 'id='+event_id+'&firstname='+event_first_name+'&lastname='+event_last_name+'&reason='+event_reason+'&physician='+event_physician_name+'&age='+event_birth+'&gender='+event_gender+'&start='+event_start_date+'&end='+event_end_date,
  	   		type: "POST",
  	   		success: function(json) {
  	   			$('#bookingModal').modal('hide');
@@ -286,12 +301,14 @@ if(!isset($_SESSION['username']) || empty($_SESSION['username'])){
   }
   
   .required:after { content:" *" ;color:red  }
+  
+  .tooltip > .tooltip-inner {color: #000; background-color: #fff;}
 
 </style>
 </head>
 <body>
 	
-    <center><h3><b>MediBook Clinic Application</b></h3></center></br>
+    <center><h3 style="color:#002B70"><b>MediBook Clinic Application</b></h3></center></br>
     <div id='calendar'></div></br>
     <div id="block_container">
         <div id="bloc1"><i class="fa fa-circle" style="font-size:20px;color:#31CD73; padding-right: 10px;"></i>Approved</div>  
