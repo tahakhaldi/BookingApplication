@@ -11,7 +11,9 @@ if(!isset($_SESSION['username']) || empty($_SESSION['username'])){
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset='utf-8' />
+<meta charset="UTF-8"/>
+<title>MediBook Clinic Application</title>
+<link rel="icon" href="../favicon.png"/>
 <link rel="stylesheet" href='../fullcalendar.min.css' />
 <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
 <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />

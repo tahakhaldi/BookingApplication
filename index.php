@@ -81,6 +81,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 <head>
   <meta charset="UTF-8">
   <title>MediBook Login</title>
+  <link rel="icon" href="favicon.png"/>
   <link rel="stylesheet" href="login/css/style.css">
 </head>
 
