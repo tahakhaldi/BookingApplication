@@ -38,7 +38,7 @@ if(!isset($_SESSION['username']) || empty($_SESSION['username'])){
     	      text: 'New booking',
     	      click: function() {
     	    	$(':input').val('');
-    	    	$('#bookingStartTime').val($.fullCalendar.formatDate(moment(), "Y-MM-DD HH:mm:ss")); 
+    	    	$('#bookingStartTime').val($.fullCalendar.formatDate(moment(), "Y-MM-DD HH:mm")); 
     	      	$('#bookingModal').modal('show');
     	      }
     	    },
@@ -83,15 +83,15 @@ if(!isset($_SESSION['username']) || empty($_SESSION['username'])){
       		element.attr('data-event-age', event.age);
       		element.attr('data-event-gender', event.gender);
       		element.attr('data-event-color', event.color);
-      		element.attr('data-event-start', $.fullCalendar.formatDate(event.start, "Y-MM-DD HH:mm:ss"));
-      		element.attr('data-event-end', $.fullCalendar.formatDate(event.end, "Y-MM-DD HH:mm:ss"));
+      		element.attr('data-event-start', $.fullCalendar.formatDate(event.start, "Y-MM-DD HH:mm"));
+      		element.attr('data-event-end', $.fullCalendar.formatDate(event.end, "Y-MM-DD HH:mm"));
             element[0].className += ' eventmenu';
             var physician_name = event.physician.split('_');
             $(element).tooltip({title: "<div align='left'><b>Patient Full Name: </b>"+event.firstname+" "+event.lastname+"<br/><b>Patient Gender: </b>"+event.gender+"<br/><b>Physician Name: </b>"+"Dr. "+capitalizeFirstLetter(physician_name[0])+" "+capitalizeFirstLetter(physician_name[1])+"</div>", container:'body', placement:'right', html:true});
    	  	},
    	 	dayRender: function(day, cell) {
    	   		cell.attr('data-day-id', day.format());
-   	   		cell.attr('data-day-start', $.fullCalendar.formatDate(day, "Y-MM-DD HH:mm:ss"));
+   	   		cell.attr('data-day-start', $.fullCalendar.formatDate(day, "Y-MM-DD HH:mm"));
         	cell[0].className += ' daymenu';
  		},
         eventClick: function(event) {
@@ -102,8 +102,8 @@ if(!isset($_SESSION['username']) || empty($_SESSION['username'])){
 			$('#bookingDoctor').val(event.physician); 
 			$('#patientBirth').val(event.age);
 			$('#patientGender').val(event.gender);
-			$('#bookingStartTime').val($.fullCalendar.formatDate(event.start, "Y-MM-DD HH:mm:ss")); 
-			$('#bookingEndTime').val($.fullCalendar.formatDate(event.end, "Y-MM-DD HH:mm:ss")); 
+			$('#bookingStartTime').val($.fullCalendar.formatDate(event.start, "Y-MM-DD HH:mm")); 
+			$('#bookingEndTime').val($.fullCalendar.formatDate(event.end, "Y-MM-DD HH:mm")); 
         	$('#bookingModal').modal('show');
        	}  	  
     });
@@ -229,12 +229,17 @@ if(!isset($_SESSION['username']) || empty($_SESSION['username'])){
 	    var event_gender = $('#patientGender').val();	    
 		var event_start_date = $('#bookingStartTime').val();
 		var event_end_date = $('#bookingEndTime').val();
-		if (new Date(event_birth).getFullYear() > new Date().getFullYear()-18) {
-			$.alert("Patient must be at least 18 years of age!");
+		if (new Date(event_birth).getFullYear() >= new Date().getFullYear()-18) {
+			$.alert("Patient must be at least 18 years of age! Otherwise, please register his or her's guardian's date of birth");
 			return;
-		}	
-		if (new Date(event_start_date).getTime() > new Date(event_end_date).getTime()) {
-			$.alert("Booking End Date cannot be before Start Date!");
+		} else if (new Date(event_birth).getFullYear() < new Date().getFullYear()-99) {
+			$.alert("Patient cannot be over 100 years of age!");
+			return;
+		} else if (new Date(event_start_date).getTime() >= new Date(event_end_date).getTime()) {
+			$.alert("Booking End Date must be after Start Date!");
+			return;
+		} else if (bookingTimeLapseViolation(event_start_date, event_end_date)) {		
+			$.alert("Maximum booking time cannot be over 30 minutes!");
 			return;
 		}
 		var required_data = {event_first_name: event_first_name, event_last_name: event_last_name, event_birth: event_birth, event_gender: event_gender, event_physician_name: event_physician_name, event_start_date: event_start_date, event_end_date: event_end_date};
@@ -347,7 +352,7 @@ if(!isset($_SESSION['username']) || empty($_SESSION['username'])){
             <div class="row">           
                 <div class='col-md-6'>
                     <div class="form-group">
-                    	<label for="patientBirth" class="required">Patient Birth</label>
+                    	<label for="patientBirth" class="required">Patient Date of Birth</label>
                         <div class='input-group date'>
                             <input type='text' id='patientBirth' class="form-control" placeholder="yyyy-mm-dd"/>
                             <span class="input-group-addon"></span>
@@ -386,7 +391,7 @@ if(!isset($_SESSION['username']) || empty($_SESSION['username'])){
                     <div class="form-group">
                     	<label for="bookingStartTime" class="required">Start Date/Time</label>
                         <div class='input-group date'>
-                            <input type='text' id='bookingStartTime' class="form-control" placeholder="yyyy-mm-dd hh:mm:ss"/>
+                            <input type='text' id='bookingStartTime' class="form-control" placeholder="yyyY-MM-DD HH:mm"/>
                             <span class="input-group-addon"></span>
                         </div>
                     </div>
@@ -395,7 +400,7 @@ if(!isset($_SESSION['username']) || empty($_SESSION['username'])){
                     <div class="form-group">
                     	<label for="bookingEndTime" class="required">End Date/Time</label>
                         <div class='input-group date' >
-                            <input type='text' id='bookingEndTime' class="form-control" placeholder="yyyy-mm-dd hh:mm:ss"/>
+                            <input type='text' id='bookingEndTime' class="form-control" placeholder="yyyY-MM-DD HH:mm"/>
                             <span class="input-group-addon"></span>
                         </div>
                     </div>
@@ -414,10 +419,12 @@ if(!isset($_SESSION['username']) || empty($_SESSION['username'])){
                     	format: 'Y-MM-DD'
                     });
                     $('#bookingStartTime').datetimepicker({
-                    	format: 'Y-MM-DD HH:mm:ss'
+                    	format: 'Y-MM-DD HH:mm',
+                    	stepping: 30
                     });
                     $('#bookingEndTime').datetimepicker({
-                    	format: 'Y-MM-DD HH:mm:ss',
+                    	format: 'Y-MM-DD HH:mm',
+                    	stepping: 30,
                         useCurrent: false //Important! See issue #1075
                     });
                     $("#bookingStartTime").on("dp.change", function (e) {
@@ -442,5 +449,14 @@ if(!isset($_SESSION['username']) || empty($_SESSION['username'])){
 <script>
     function capitalizeFirstLetter(string) {
         return string.charAt(0).toUpperCase() + string.slice(1);
+    }
+    function bookingTimeLapseViolation(start, end) {
+        if((Math.floor((new Date(end) - new Date(start)) / 86400000) >= 1)
+            || (Math.floor(((new Date(end) - new Date(start)) % 86400000) / 3600000) >= 1)
+               || (Math.round((((new Date(end) - new Date(start)) % 86400000) % 3600000) / 60000) > 30)){
+        	return true;
+        } else {
+            return false;
+        }
     }
 </script>
