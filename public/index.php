@@ -230,29 +230,38 @@ if(!isset($_SESSION['username']) || empty($_SESSION['username'])){
 		var event_start_date = $('#bookingStartTime').val();
 		var event_end_date = $('#bookingEndTime').val();
 		if (new Date(event_birth).getFullYear() >= new Date().getFullYear()-18) {
-			$.alert("Patient must be at least 18 years of age! Otherwise, please register his or her's guardian's date of birth");
+			$('#patientBirthDiv').addClass('has-error');
+			$('#patientBirthDiv').append("<span class='help-block'>"+"Patient must be at least 18 years of age!"+'</span>');
 			return;
 		} else if (new Date(event_birth).getFullYear() < new Date().getFullYear()-99) {
-			$.alert("Patient cannot be over 100 years of age!");
+			$('#patientBirthDiv').addClass('has-error');
+			$('#patientBirthDiv').append("<span class='help-block'>"+"Patient cannot be over 100 years of age!"+'</span>');
 			return;
 		} else if (new Date(event_start_date).getTime() >= new Date(event_end_date).getTime()) {
-			$.alert("Booking End Date must be after Start Date!");
+			$('#bookingEndTimeDiv').addClass('has-error');
+			$('#bookingEndTimeDiv').append("<span class='help-block'>"+"Booking End Date must be after Start Date!"+'</span>');
 			return;
-		} else if (bookingTimeLapseViolation(event_start_date, event_end_date)) {		
-			$.alert("Maximum booking time cannot be over 30 minutes!");
+		} else if (bookingTimeLapseViolation(event_start_date, event_end_date)) {	
+			$('#bookingEndTimeDiv').addClass('has-error');
+			$('#bookingEndTimeDiv').append("<span class='help-block'>"+"Maximum booking time cannot be over 30 minutes!"+'</span>');	
 			return;
 		}
-		var required_data = {event_first_name: event_first_name, event_last_name: event_last_name, event_birth: event_birth, event_gender: event_gender, event_physician_name: event_physician_name, event_start_date: event_start_date, event_end_date: event_end_date};
-	    for (var prop in required_data) {
-			if (!required_data[prop]) {
-				if(prop.split('_')[2]){
-					$.alert(capitalizeFirstLetter(prop.split('_')[1])+" "+capitalizeFirstLetter(prop.split('_')[2])+" cannot be empty!");	
-				} else {
-					$.alert(capitalizeFirstLetter(prop.split('_')[1])+" cannot be empty!");
-				}
-				return;
-			}
-	    }
+		var emptyTextBoxes = $('input:text').filter(function() { return $(this).val() == ""; });
+		if(emptyTextBoxes.length !== 0 || ($('#bookingDoctor option:selected').text() == "") || ($('#patientGender option:selected').text() == "")){
+		    emptyTextBoxes.each(function() {
+		        $('#'+this.id+'Div').addClass('has-error');
+		        $('#'+this.id+'Div').append("<span class='help-block'>"+"Cannot be empty!"+'</span>');	
+		    });	
+		    if($('#patientGender option:selected').text() == ""){
+		    	$('#patientGenderDiv').addClass('has-error');  
+		    	$('#patientGenderDiv').append("<span class='help-block'>"+"Cannot be empty!"+'</span>');	  
+		    }
+		    if($('#bookingDoctor option:selected').text() == ""){
+		    	$('#bookingDoctorDiv').addClass('has-error'); 
+		    	$('#bookingDoctorDiv').append("<span class='help-block'>"+"Cannot be empty!"+'</span>');	   
+		    }
+		    return;			       
+		}
     	$.ajax({
  	   		url: 'save_events.php',
  	   		data: 'id='+event_id+'&firstname='+event_first_name+'&lastname='+event_last_name+'&reason='+event_reason+'&physician='+event_physician_name+'&age='+event_birth+'&gender='+event_gender+'&start='+event_start_date+'&end='+event_end_date,
@@ -264,8 +273,10 @@ if(!isset($_SESSION['username']) || empty($_SESSION['username'])){
     	});
 	});
 
-	$('#bookingModal').on('hidden.bs.modal', function () {    
-	    $(':input').val('');
+	$('#bookingModal').on('hidden.bs.modal', function () { 
+		$(".has-error").find('span.help-block').remove();  
+		$(".has-error").removeClass("has-error"); 
+		$(this).find("input,textarea,select").val('').end();
 	});
 
   });
@@ -333,34 +344,39 @@ if(!isset($_SESSION['username']) || empty($_SESSION['username'])){
             <h4 class="modal-title">Booking Form</h4>
           </div>
           <div class="modal-body">
-          
-          	<input type="hidden" id="patientId"/>      
+          	<input type="hidden" id="patientId"/>             	  
           	<label for="patientFirstName" class="required">Patient Full Name</label>
             <div class="row">           
                 <div class='col-md-6'>
-                    <div class="form-group">
+                    <div id="patientFirstNameDiv" class="form-group">
                         <input type="text" class="form-control form-control-sm" style="text-transform: capitalize;" id="patientFirstName" placeholder="First name"/>
                     </div>
                 </div>
                 <div class='col-md-6'>
-                    <div class="form-group">
+                    <div id="patientLastNameDiv" class="form-group">
                         <input type="text" class="form-control form-control-sm" style="text-transform: capitalize;" id="patientLastName" placeholder="Last name"/>
                     </div>
+                    <!-- 
+                    <div class="form-group has-error">
+                        <input type="text" class="form-control form-control-sm" style="text-transform: capitalize;" id="patientLastName" placeholder="Last name"/>
+                   		<span class="help-block">Please correct the error</span>
+                    </div>   
+                    -->                 
                 </div>
             </div>                             
                      	
             <div class="row">           
                 <div class='col-md-6'>
-                    <div class="form-group">
+                    <div id="patientBirthDiv" class="form-group">
                     	<label for="patientBirth" class="required">Patient Date of Birth</label>
                         <div class='input-group date'>
-                            <input type='text' id='patientBirth' class="form-control" placeholder="yyyy-mm-dd"/>
+                            <input type='text' id='patientBirth' class="form-control" placeholder="YYYY-MM-DD"/>
                             <span class="input-group-addon"></span>
                         </div>
                     </div>
                 </div>
                 <div class='col-md-6'>
-                    <div class="form-group">
+                    <div id="patientGenderDiv" class="form-group">
                     	<label for="patientGender" class="required">Patient Gender</label>
                     	<select class="form-control form-control-sm" id="patientGender">
                           	<option>Male</option>
@@ -370,7 +386,7 @@ if(!isset($_SESSION['username']) || empty($_SESSION['username'])){
                 </div>
             </div> 
                                
-            <div class="form-group">
+            <div id="bookingDoctorDiv" class="form-group">
                 <label for="bookingDoctor" class="required">Physician Name</label>
                 <select class="form-control form-control-sm" id="bookingDoctor">
                   <option value="david_warkentin">Dr. David Warkentin</option>
@@ -381,26 +397,26 @@ if(!isset($_SESSION['username']) || empty($_SESSION['username'])){
                 </select>
             </div>
             
-            <div class="form-group">
+            <div id="patientReasonofVisitDiv" class="form-group">
             	<label for="patientReasonofVisit">Reason of visit</label>
             	<textarea rows="2" class="form-control" id="patientReasonofVisit" placeholder="Please Explain."></textarea>
             </div>              
                    
             <div class="row">           
                 <div class='col-md-6'>
-                    <div class="form-group">
+                    <div id="bookingStartTimeDiv" class="form-group">
                     	<label for="bookingStartTime" class="required">Start Date/Time</label>
                         <div class='input-group date'>
-                            <input type='text' id='bookingStartTime' class="form-control" placeholder="yyyY-MM-DD HH:mm"/>
+                            <input type='text' id='bookingStartTime' class="form-control" placeholder="YYYY-MM-DD HH:mm"/>
                             <span class="input-group-addon"></span>
                         </div>
                     </div>
                 </div>
                 <div class='col-md-6'>
-                    <div class="form-group">
+                    <div id="bookingEndTimeDiv" class="form-group">
                     	<label for="bookingEndTime" class="required">End Date/Time</label>
                         <div class='input-group date' >
-                            <input type='text' id='bookingEndTime' class="form-control" placeholder="yyyY-MM-DD HH:mm"/>
+                            <input type='text' id='bookingEndTime' class="form-control" placeholder="YYYY-MM-DD HH:mm"/>
                             <span class="input-group-addon"></span>
                         </div>
                     </div>
