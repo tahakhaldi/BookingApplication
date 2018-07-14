@@ -432,7 +432,8 @@ if(!isset($_SESSION['username']) || empty($_SESSION['username'])){
             <script type="text/javascript">
                 $(function () {
                 	$('#patientBirth').datetimepicker({
-                    	format: 'Y-MM-DD'
+                    	format: 'Y-MM-DD',
+                    	defaultDate: "2000-01-01"
                     });
                     $('#bookingStartTime').datetimepicker({
                     	format: 'Y-MM-DD HH:mm',
