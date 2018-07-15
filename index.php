@@ -88,7 +88,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 <body>
 
   <div class="login-page">
-  <center><h2 style="color:#002B70">MediBook Clinic Application</h2></center>
+  </br></br>
   <div class="form">
     <form class="login-form" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
       <div class="form-group <?php echo (!empty($username_err)) ? 'has-error' : ''; ?>">

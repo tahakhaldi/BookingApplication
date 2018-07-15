@@ -285,7 +285,7 @@ if(!isset($_SESSION['username']) || empty($_SESSION['username'])){
 <style>
 
   body {
-    background: url(../background.jpg);
+    background: url(../background2.jpg);
     background-repeat: no-repeat;
     background-size: 100% 100%;
     margin: 40px 10px;
